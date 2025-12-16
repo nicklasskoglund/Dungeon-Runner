@@ -7,7 +7,11 @@ python -m venv .venv
 # Windows: .venv\Scripts\activate
 source .venv/bin/activate
 
-pip install -r requirements.txt
+# Install in development mode (editable)
+pip install -e .
+
+# Or install normally
+pip install .
 ```
 
 ---
