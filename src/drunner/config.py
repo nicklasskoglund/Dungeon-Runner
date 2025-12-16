@@ -57,8 +57,8 @@ def load_config(config_path: Path | None = None) -> AppConfig:
     assets_dir = root / paths.get('assets_dir', 'assets')
     
     # säkerställ att output-mappar finns
-    logs_dir.mkdir(parents=True, exist=True)
-    reports_dir.mkdir(parents=True, exist=True)
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    reports_dir.mkdir(parents=True, exist_ok=True)
     
     log_file = logs_dir / str(logging_cfg.get('file_name', 'drunner.log'))
     
