@@ -1,24 +1,35 @@
 # Dungeon Runner
 
-## Install
+## Installation:
+- ### Install venv
 ```bash
+# Create venv:
 python -m venv .venv
+```
+- ### Activate venv
+```bash
+# Windows:
+source .venv/scripts/activate
 
-# Windows: .venv\Scripts\activate
+# macOS/Linux:
 source .venv/bin/activate
+```
 
-# Install in development mode (editable)
+
+- ### Install
+```bash
+# Install in development mode (editable):
 pip install -e .
 
-# Or install normally
-pip install .
+# Optional
+pip install -r requirements.txt
 ```
 
 ---
 
-## Run
+### Run
 ```bash
-python -m drunner play
+drunner play
 ```
 
 ---
