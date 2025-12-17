@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from drunner_core.level import Level
+
 import pygame
 
 if TYPE_CHECKING:
@@ -41,6 +43,17 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger') -> None:
             cfg.window_height,
             cfg.fps,
         )
+        
+        demo = Level.from_ascii(
+            [
+                '##########',
+                '#S......E#',
+                '#........#',
+                '##########',
+            ],
+            name='demo',
+        )
+        logger.debug('Loaded demo level: %s (%dx%d)', demo.name, demo.width, demo.height)
         
         while running:
             # Handle input/events.
