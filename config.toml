@@ -1,16 +1,21 @@
+# Project configuration for Dungeon Runner.
+
 [paths]
+# Directories are relative to the project root.
 logs_dir = 'logs'
 reports_dir = 'reports'
 levels_dir = 'levels'
 assets_dir = 'assets'
 
 [logging]
+# Typical levels: DEBUG, INFO, WARNING, ERROR
 console_level = 'INFO'
 file_level = 'DEBUG'
 file_name = 'drunner.log'
 
 [game]
+# Window size in pixels.
 window_width = 960
-window_heigth = 540
+window_height = 540
 fps = 60
 title = 'Dungeon Runner'

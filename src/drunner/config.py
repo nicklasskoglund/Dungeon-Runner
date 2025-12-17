@@ -1,5 +1,12 @@
 # src/drunner/config.py
 
+'''
+Configuration loader for drunner.
+
+Reads configuration from a TOML file (default: config.toml in the project root)
+and returns a strongly-typed AppConfig object.
+'''
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,11 +17,16 @@ from typing import Any
 try:
     import tomllib              # Python 3.11+
 except ModuleNotFoundError:     # pragma: no cover
-    tomllib = None
+    tomllib = None              # TOML parsing not available on older Python versions
 
 
 @dataclass(frozen=True)
 class AppConfig:
+    '''
+    Application configuration.
+
+    Holds resolved directories, logging settings, and basic game settings.
+    '''
     root_dir: Path
     logs_dir: Path
     reports_dir: Path
@@ -31,13 +43,33 @@ class AppConfig:
     title: str
     
 def _project_root() -> Path:
+    '''
+    Resolve the repository/project root directory.
+
+    Returns:
+        Path: Project root directory.
+    '''
     # src/drunner/config.py -> parants[2] = repo-root
     return Path(__file__).resolve().parents[2]
 
 
 def load_config(config_path: Path | None = None) -> AppConfig:
+    '''
+    Load configuration from TOML and return an AppConfig instance.
+
+    Args:
+        config_path: Optional path to a TOML config file. If None, uses
+                     <project_root>/config.toml.
+
+    Returns:
+        AppConfig: Parsed and resolved configuration.
+
+    Raises:
+        FileNotFoundError: If the config file does not exist.
+        RuntimeError: If TOML support (tomllib) is not available.
+    '''
     root = _project_root()
-    cfg_path = config_path or (root / 'config.toml')
+    cfg_path = config_path or (root / 'config.toml')    # Default config location
     
     if not cfg_path.exists():
         raise FileNotFoundError(f'Missing config file: {cfg_path}')
@@ -45,18 +77,20 @@ def load_config(config_path: Path | None = None) -> AppConfig:
     if tomllib is None:
         raise RuntimeError('tomllib not available. Use Python 3.11+ for config.toml support')
     
+    # Read and parse TOML into a nested dict structure
     data: dict[str, Any] = tomllib.loads(cfg_path.read_text(encoding='utf-8'))
     
     paths = data.get('paths', {})
     logging_cfg = data.get('logging', {})
     game = data.get('game', {})
     
+    # Resolve directories relative to project root
     logs_dir = root / paths.get('logs_dir', 'logs')
     reports_dir = root / paths.get('reports_dir', 'reports')
     levels_dir = root / paths.get('levels_dir', 'levels')
     assets_dir = root / paths.get('assets_dir', 'assets')
     
-    # säkerställ att output-mappar finns
+    # Ensure output directories exist (safe to call multiple times)
     logs_dir.mkdir(parents=True, exist_ok=True)
     reports_dir.mkdir(parents=True, exist_ok=True)
     

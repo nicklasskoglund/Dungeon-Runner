@@ -228,7 +228,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Runtime outputs (vi versionshanterar bara .gitkeep)
+# Runtime outputs (keep only .gitkeep in version control)
 logs/*
 !logs/.gitkeep
 reports/*
