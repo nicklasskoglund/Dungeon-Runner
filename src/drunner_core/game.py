@@ -8,11 +8,13 @@ Sets up pygame, opens a window, handles basic events, and renders a minimal fram
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from drunner_core.level import Level
-
 import pygame
+
+from drunner_core.level import Level
+from drunner_core.level_io import load_level
 
 if TYPE_CHECKING:
     # Imported only for type hints (avoids runtime imports/circular dependencies).
@@ -20,23 +22,36 @@ if TYPE_CHECKING:
     from drunner.config import AppConfig
     
     
-def run_game(cfg: 'AppConfig', logger: 'logging.Logger') -> None:
+def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None = None) -> None:
     '''
     Run the main pygame loop.
 
     Args:
         cfg: Game/app configuration (window size, FPS, title).
         logger: Application logger for lifecycle messages.
+        level_path: Optional path to a JSON level file. If None, uses a fallback demo level.
     '''
+    # Load level (from JSON if provided, otherwise fallback)
+    level = load_level(level_path) if level_path else Level.from_ascii(
+        [
+            '##########',
+            '#S......E#',
+            '#........#',
+            '##########',
+        ],
+        name='fallback_demo',
+    )
+    logger.info('Level loaded: %s (%dx%d)', level.name, level.width, level.height)
+    
     pygame.init()
     try:
         # Create the window and set the title.
         screen = pygame.display.set_mode((cfg.window_width, cfg.window_height))
         pygame.display.set_caption(cfg.title)
-        
+
         clock = pygame.time.Clock()
         running = True
-        
+
         logger.info(
             'Pygame initialized (%dx%d @ %dfps)',
             cfg.window_width,
@@ -44,29 +59,18 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger') -> None:
             cfg.fps,
         )
         
-        demo = Level.from_ascii(
-            [
-                '##########',
-                '#S......E#',
-                '#........#',
-                '##########',
-            ],
-            name='demo',
-        )
-        logger.debug('Loaded demo level: %s (%dx%d)', demo.name, demo.width, demo.height)
-        
         while running:
             # Handle input/events.
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    running = False     # ESC quits
-                    
+                    running = False  # ESC quits
+
             # Minimal render (just a background fill).
             screen.fill((20, 20, 20))
             pygame.display.flip()
-            
+
             # Cap the loop to the configured FPS.
             clock.tick(cfg.fps)
             
