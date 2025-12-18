@@ -74,7 +74,7 @@ def _validate_required_tiles(level: Level, source: Path) -> None:
     '''
     Enforce minimal constraints so levels are playable.
     '''
-    if level.find_first(Tile.START) in None:
+    if level.find_first(Tile.START) is None:
         raise LevelIOError(f'Level missing START tile in {source}')
     if level.find_first(Tile.EXIT) is None:
         raise LevelIOError(f'Level missing EXIT tile in {source}')
