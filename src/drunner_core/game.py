@@ -15,6 +15,7 @@ import pygame
 
 from drunner_core.level import Level
 from drunner_core.level_io import load_level
+from drunner_core.render import compute_render_params, draw_level
 
 if TYPE_CHECKING:
     # Imported only for type hints (avoids runtime imports/circular dependencies).
@@ -42,12 +43,20 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
         name='fallback_demo',
     )
     logger.info('Level loaded: %s (%dx%d)', level.name, level.width, level.height)
-    
+
     pygame.init()
     try:
         # Create the window and set the title.
         screen = pygame.display.set_mode((cfg.window_width, cfg.window_height))
         pygame.display.set_caption(cfg.title)
+        
+        params = compute_render_params(level, cfg.window_width, cfg.window_height)
+        logger.debug(
+            'Render params: tile_size=%d offset=(%d,%d)',
+            params.tile_size,
+            params.offset_x,
+            params.offset_y,
+        )
 
         clock = pygame.time.Clock()
         running = True
@@ -69,6 +78,7 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
 
             # Minimal render (just a background fill).
             screen.fill((20, 20, 20))
+            draw_level(screen, level, params)
             pygame.display.flip()
 
             # Cap the loop to the configured FPS.
