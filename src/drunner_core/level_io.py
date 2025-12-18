@@ -29,7 +29,7 @@ def load_level(path: Path) -> Level:
     Tile encoding must match Tile enum integers.
     '''
     if not path.exists():
-        raise FileNotFoundError(f'Level file not found: {path}')
+        raise FileNotFoundError(f'Level file not found in levels/: {path.name}')
     
     try:
         raw = path.read_text(encoding='utf-8')
@@ -73,8 +73,23 @@ def save_level(level: Level, path: Path) -> None:
 def _validate_required_tiles(level: Level, source: Path) -> None:
     '''
     Enforce minimal constraints so levels are playable.
+    - Exactly 1 START
+    - At least 1 EXIT
     '''
-    if level.find_first(Tile.START) is None:
-        raise LevelIOError(f'Level missing START tile in {source}')
-    if level.find_first(Tile.EXIT) is None:
-        raise LevelIOError(f'Level missing EXIT tile in {source}')
+    starts = list(level.positions_of(Tile.START))
+    exits = list(level.positions_of(Tile.EXIT))
+
+    if len(starts) != 1:
+        raise LevelIOError(
+            f'{source.name}: expected exactly 1 START tile (value=2), found {len(starts)}'
+        )
+
+    if len(exits) < 1:
+        raise LevelIOError(
+            f'{source.name}: expected at least 1 EXIT tile (value=3), found 0'
+        )
+        
+    if len(exits) != 1:
+        raise LevelIOError(
+            f"{source.name}: expected exactly 1 EXIT tile (value=3), found {len(exits)}"
+        )
