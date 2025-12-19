@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import pygame
 
 from drunner_core.level import Level, Tile
+from drunner_core.player import Player
 
 
 @dataclass(frozen=True)
@@ -62,3 +63,18 @@ def draw_level(surface: pygame.surface, level: Level, params: RenderParams) -> N
     # Subtle border around the grid (helps readability)
     border = pygame.Rect(ox, oy, level.width * ts, level.height * ts)
     pygame.draw.rect(surface, (20, 20, 20), border, width=2)
+    
+    
+def draw_player(surface: pygame.Surface, player: Player, params: RenderParams) -> None:
+    ts = params.tile_size
+    ox = params.offset_x
+    oy = params.offset_y
+    
+    pad = max(2, ts // 8)
+    rect = pygame.Rect(
+        ox + player.x * ts + pad,
+        oy + player.y * ts + pad,
+        ts - 2 * pad,
+        ts - 2 * pad,
+    )
+    pygame.draw.rect(surface, (220, 220, 80), rect)
