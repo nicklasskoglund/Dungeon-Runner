@@ -13,12 +13,16 @@ from typing import TYPE_CHECKING
 
 import pygame
 
-from drunner_core.level import Level
+from drunner_core.level import Level, Tile
 from drunner_core.level_io import load_level
 from drunner_core.render import compute_render_params, draw_level, draw_player
 from drunner_core.game_helpers import find_spawn
 from drunner_core.movement import try_move
 from drunner_core.player import Player
+from drunner_core.state import GameState
+
+TIME_LIMIT_SECONDS = 60
+RESULT_HOLD_MS = 1200
 
 if TYPE_CHECKING:
     # Imported only for type hints (avoids runtime imports/circular dependencies).
@@ -51,8 +55,16 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
     sx, sy = find_spawn(level)
     player = Player(x=sx, y=sy)
     logger.info('Player spawned at (%d,%d)', player.x, player.y)
+    
+    state = GameState.RUNNING
+    state_end_ticks: int | None = None
+
+    # Placeholder för framtida enemy-system:
+    enemies: list[tuple[int, int]] = []
 
     pygame.init()
+    start_ticks = pygame.time.get_ticks()
+    
     try:
         # Create the window and set the title.
         screen = pygame.display.set_mode((cfg.window_width, cfg.window_height))
@@ -77,6 +89,9 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
         )
         
         while running:
+            now_ticks = pygame.time.get_ticks()
+            elapsed_s = (now_ticks - start_ticks) / 1000.0
+
             # Handle input/events.
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -85,6 +100,10 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False  # ESC quits
+                        continue
+
+                    # Stoppa input när vi redan har WON/LOST
+                    if state != GameState.RUNNING:
                         continue
 
                     moved = False
@@ -100,7 +119,34 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
                     if moved:
                         logger.debug('Player moved to (%d,%d)', player.x, player.y)
 
-            # Minimal render (just a background fill).
+            # --- Win/Lose checks (bara medan RUNNING) ---
+            if state == GameState.RUNNING:
+                # Win: player når exit
+                if level.tile_at(player.x, player.y) == Tile.EXIT:
+                    state = GameState.WON
+                    logger.info('Result: WON (exit reached) in %.2fs', elapsed_s)
+                    pygame.display.set_caption(f'{cfg.title} - WON')
+                    state_end_ticks = now_ticks + RESULT_HOLD_MS
+
+                # Lose: enemy collision (hook för senare)
+                elif any((ex == player.x and ey == player.y) for ex, ey in enemies):
+                    state = GameState.LOST
+                    logger.info('Result: LOST (enemy collision) in %.2fs', elapsed_s)
+                    pygame.display.set_caption(f'{cfg.title} - LOST')
+                    state_end_ticks = now_ticks + RESULT_HOLD_MS
+
+                # Lose: timer
+                elif elapsed_s >= TIME_LIMIT_SECONDS:
+                    state = GameState.LOST
+                    logger.info(
+                        'Result: LOST (time limit %.0fs) in %.2fs',
+                        TIME_LIMIT_SECONDS,
+                        elapsed_s,
+                    )
+                    pygame.display.set_caption(f'{cfg.title} - LOST')
+                    state_end_ticks = now_ticks + RESULT_HOLD_MS
+
+            # Render
             screen.fill((20, 20, 20))
             draw_level(screen, level, params)
             draw_player(screen, player, params)
@@ -108,6 +154,14 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
 
             # Cap the loop to the configured FPS.
             clock.tick(cfg.fps)
+
+            # Auto-exit shortly after result
+            if state_end_ticks is not None and pygame.time.get_ticks() >= state_end_ticks:
+                running = False
+                
+        if state == GameState.RUNNING:
+            elapsed_s = (pygame.time.get_ticks() - start_ticks) / 1000.0
+            logger.info('Result: ABORTED (quit) in %.2fs', elapsed_s)
             
     finally:
         # Always clean up pygame, even if something crashes.
