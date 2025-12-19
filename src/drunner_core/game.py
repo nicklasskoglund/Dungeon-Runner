@@ -20,6 +20,7 @@ from drunner_core.game_helpers import find_spawn
 from drunner_core.movement import try_move
 from drunner_core.player import Player
 from drunner_core.state import GameState
+from drunner.report import write_run_report
 
 TIME_LIMIT_SECONDS = 60
 RESULT_HOLD_MS = 1200
@@ -55,6 +56,16 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
     sx, sy = find_spawn(level)
     player = Player(x=sx, y=sy)
     logger.info('Player spawned at (%d,%d)', player.x, player.y)
+    
+    # Project root for reports: prefer cfg.root if it exists, else CWD
+    project_root = Path(getattr(cfg, 'root', Path.cwd()))
+    
+    report_written = False
+    level_source = str(level_path) if level_path else f'ascii:{level.name}'
+    
+    # Keep one seed/run_id per run (seed can be used later for determinism)
+    run_seed = None
+    run_id = None
     
     state = GameState.RUNNING
     state_end_ticks: int | None = None
@@ -127,6 +138,20 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
                     logger.info('Result: WON (exit reached) in %.2fs', elapsed_s)
                     pygame.display.set_caption(f'{cfg.title} - WON')
                     state_end_ticks = now_ticks + RESULT_HOLD_MS
+                    
+                    if not report_written:
+                        report_path = write_run_report(
+                            project_root=project_root,
+                            result=state.name,                 # 'WON'
+                            duration_seconds=elapsed_s,
+                            level_source=level_source,
+                            seed=run_seed,
+                            run_id=run_id,
+                            score=None,
+                            version=None,
+                        )
+                        logger.info('Run report saved: %s', report_path)
+                        report_written = True
 
                 # Lose: enemy collision (hook för senare)
                 elif any((ex == player.x and ey == player.y) for ex, ey in enemies):
@@ -134,17 +159,41 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
                     logger.info('Result: LOST (enemy collision) in %.2fs', elapsed_s)
                     pygame.display.set_caption(f'{cfg.title} - LOST')
                     state_end_ticks = now_ticks + RESULT_HOLD_MS
+                    
+                    if not report_written:
+                        report_path = write_run_report(
+                            project_root=project_root,
+                            result=state.name,                 # 'LOST'
+                            duration_seconds=elapsed_s,
+                            level_source=level_source,
+                            seed=run_seed,
+                            run_id=run_id,
+                            score=None,
+                            version=None,
+                        )
+                        logger.info('Run report saved: %s', report_path)
+                        report_written = True
 
                 # Lose: timer
                 elif elapsed_s >= TIME_LIMIT_SECONDS:
                     state = GameState.LOST
-                    logger.info(
-                        'Result: LOST (time limit %.0fs) in %.2fs',
-                        TIME_LIMIT_SECONDS,
-                        elapsed_s,
-                    )
+                    logger.info('Result: LOST (time limit %.0fs) in %.2fs', TIME_LIMIT_SECONDS, elapsed_s)
                     pygame.display.set_caption(f'{cfg.title} - LOST')
                     state_end_ticks = now_ticks + RESULT_HOLD_MS
+                    
+                    if not report_written:
+                        report_path = write_run_report(
+                            project_root=project_root,
+                            result=state.name,                 # 'LOST'
+                            duration_seconds=elapsed_s,
+                            level_source=level_source,
+                            seed=run_seed,
+                            run_id=run_id,
+                            score=None,
+                            version=None,
+                        )
+                        logger.info('Run report saved: %s', report_path)
+                        report_written = True
 
             # Render
             screen.fill((20, 20, 20))
