@@ -64,6 +64,7 @@ python -m drunner play --level demo_level.json
     ├─ .gitignore
     ├─ config.toml
     ├─ pyproject.toml
+    ├─ pytest.ini
     ├─ requirements.txt
     ├─ /src/
     │   ├─ /drunner/
@@ -99,7 +100,9 @@ python -m drunner play --level demo_level.json
     │   └─ .gitkeep
     └─ /tests/
         ├─ test_bugreport.py
-        └─ test_report.py
+        ├─ test_level_io.py
+        ├─ test_report.py
+        └─ test_security.py
 ```
 
 ---
