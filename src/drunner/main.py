@@ -11,6 +11,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from drunner.bugreport import write_crash_report
 from drunner.config import load_config
 from drunner.log import configure_logging
 from drunner.security import SecurityError, require_suffix, safe_resolve
@@ -52,8 +53,21 @@ def run(level: str | None = None) -> int:
         print(f'See log file: {cfg.log_file}', file=sys.stderr)
         return 2
     
-    except Exception:
-        logger.exception('Unhandled exception')
+    except Exception as e:
+        crash_path = write_crash_report(
+            project_root=cfg.root_dir,
+            exc=e,
+            cfg=cfg,
+            # run_id/seed kan vara None nu -> genereras i bugreport.py
+            run_id=None,
+            seed=None,
+            log_file_path=Path(cfg.log_file) if getattr(cfg, 'log_file', None) else None,
+            version=None,
+        )
+
+        logger.exception('Unhandled exception. Crash report saved: %s', crash_path)
+
         print('ERROR: Unexpected crash.', file=sys.stderr)
+        print(f'Crash report: {crash_path}', file=sys.stderr)
         print(f'See log file: {cfg.log_file}', file=sys.stderr)
         return 1
