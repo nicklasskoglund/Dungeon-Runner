@@ -98,6 +98,7 @@ python -m drunner play --level demo_level.json
     ├─ /reports/
     │   └─ .gitkeep
     └─ /tests/
+        ├─ test_bugreport.py
         └─ test_report.py
 ```
 
