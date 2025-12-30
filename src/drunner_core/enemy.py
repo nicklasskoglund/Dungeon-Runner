@@ -4,36 +4,39 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from drunner_core.level import Level
 
-@dataclass
+
+@dataclass(slots=True)
 class Enemy:
+    '''
+    Basic tile-based enemy with patrol movement.
+
+    Moves one tile every move_interval seconds. If blocked, reverses direction.
+    '''
     x: int
     y: int
     dx: int = 1
     dy: int = 0
     move_interval: float = 0.35
-    _timer: float = 0.0
+    _accum: float = 0.0
 
-    def update(self, dt: float, level) -> None:
+    def update(self, dt: float, level: Level) -> None:
         '''
-        Update enemy movement (tile-based patrol).
-
-        level must expose a 'is_walkable(x, y) -> bool' or similar.
+        Per-frame update. Advances movement on a timer.
         '''
-        self._timer += dt
-        if self._timer < self.move_interval:
+        self._accum += float(dt)
+        if self._accum < self.move_interval:
             return
 
-        # consume one step
-        self._timer = 0.0
+        # keep leftover time so movement is stable across varying frame times
+        self._accum -= self.move_interval
 
         nx, ny = self.x + self.dx, self.y + self.dy
-        if level.is_walkable(nx, ny):
-            self.x, self.y = nx, ny
-            return
+        if not level.is_walkable(nx, ny):
+            # reverse and try once
+            self.dx, self.dy = -self.dx, -self.dy
+            nx, ny = self.x + self.dx, self.y + self.dy
 
-        # blocked -> reverse direction and try once
-        self.dx, self.dy = -self.dx, -self.dy
-        nx, ny = self.x + self.dx, self.y + self.dy
         if level.is_walkable(nx, ny):
             self.x, self.y = nx, ny
