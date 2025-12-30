@@ -213,6 +213,7 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
             # Render
             screen.fill((20, 20, 20))
             draw_level(screen, level, params)
+            draw_enemies(screen, enemies, params)
             draw_player(screen, player, params)
             pygame.display.flip()
 
