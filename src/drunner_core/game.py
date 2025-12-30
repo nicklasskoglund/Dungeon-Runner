@@ -13,9 +13,10 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from drunner_core.enemy import Enemy
 from drunner_core.level import Level, Tile
 from drunner_core.level_io import load_level
-from drunner_core.render import compute_render_params, draw_level, draw_player
+from drunner_core.render import compute_render_params, draw_level, draw_player, draw_enemies
 from drunner_core.game_helpers import find_spawn
 from drunner_core.movement import try_move
 from drunner_core.player import Player
@@ -70,8 +71,17 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
     state = GameState.RUNNING
     state_end_ticks: int | None = None
 
-    # Placeholder för framtida enemy-system:
-    enemies: list[tuple[int, int]] = []
+    # Enemy entities (spawn from level if present; fallback otherwise)
+    spawn_points = getattr(level, "enemies", [])
+    enemies: list[Enemy] = [Enemy(x=int(x), y=int(y)) for (x, y) in spawn_points] if spawn_points else []
+    
+    if not enemies:
+        # Fallback: place one enemy on the first walkable tile that isn't the player spawn.
+        for x, y, tile in level.iter_tiles():
+            if (x, y) != (player.x, player.y) and level.is_walkable(x, y):
+                enemies = [Enemy(x=x, y=y)]
+                logger.info("Enemy spawned (fallback) at (%d,%d)", x, y)
+                break
 
     pygame.init()
     start_ticks = pygame.time.get_ticks()
@@ -100,6 +110,7 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
         )
         
         while running:
+            dt = clock.tick(cfg.fps) / 1000.0
             now_ticks = pygame.time.get_ticks()
             elapsed_s = (now_ticks - start_ticks) / 1000.0
 
@@ -129,6 +140,10 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
 
                     if moved:
                         logger.debug('Player moved to (%d,%d)', player.x, player.y)
+                        
+            if state == GameState.RUNNING:
+                for enemy in enemies:
+                    enemy.update(dt, level)
 
             # --- Win/Lose checks (bara medan RUNNING) ---
             if state == GameState.RUNNING:
@@ -154,7 +169,7 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
                         report_written = True
 
                 # Lose: enemy collision (hook för senare)
-                elif any((ex == player.x and ey == player.y) for ex, ey in enemies):
+                elif any((enemy.x == player.x and enemy.y == player.y) for enemy in enemies):
                     state = GameState.LOST
                     logger.info('Result: LOST (enemy collision) in %.2fs', elapsed_s)
                     pygame.display.set_caption(f'{cfg.title} - LOST')
@@ -198,11 +213,9 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
             # Render
             screen.fill((20, 20, 20))
             draw_level(screen, level, params)
+            draw_enemies(screen, enemies, params)
             draw_player(screen, player, params)
             pygame.display.flip()
-
-            # Cap the loop to the configured FPS.
-            clock.tick(cfg.fps)
 
             # Auto-exit shortly after result
             if state_end_ticks is not None and pygame.time.get_ticks() >= state_end_ticks:

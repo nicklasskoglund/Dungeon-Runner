@@ -8,6 +8,7 @@ import pygame
 
 from drunner_core.level import Level, Tile
 from drunner_core.player import Player
+from drunner_core.enemy import Enemy
 
 
 @dataclass(frozen=True)
@@ -78,3 +79,19 @@ def draw_player(surface: pygame.Surface, player: Player, params: RenderParams) -
         ts - 2 * pad,
     )
     pygame.draw.rect(surface, (220, 220, 80), rect)
+    
+
+def draw_enemies(surface: pygame.Surface, enemies: list[Enemy], params: RenderParams) -> None:
+    ts = params.tile_size
+    ox = params.offset_x
+    oy = params.offset_y
+
+    pad = max(2, ts // 8)
+    for e in enemies:
+        rect = pygame.Rect(
+            ox + e.x * ts + pad,
+            oy + e.y * ts + pad,
+            ts - 2 * pad,
+            ts - 2 * pad,
+        )
+        pygame.draw.rect(surface, (200, 60, 60), rect)
