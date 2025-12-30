@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pygame
+import random
 
 from drunner_core.enemy import Enemy
 from drunner_core.level import Level, Tile
@@ -76,12 +77,16 @@ def run_game(cfg: 'AppConfig', logger: 'logging.Logger', level_path: Path | None
     enemies: list[Enemy] = [Enemy(x=int(x), y=int(y)) for (x, y) in spawn_points] if spawn_points else []
     
     if not enemies:
-        # Fallback: place one enemy on the first walkable tile that isn't the player spawn.
-        for x, y, tile in level.iter_tiles():
+        # Fallback: place one enemy on a random walkable tile that isn't the player spawn.
+        candidates: list[tuple[int, int]] = []
+        for x, y, _tile in level.iter_tiles():
             if (x, y) != (player.x, player.y) and level.is_walkable(x, y):
-                enemies = [Enemy(x=x, y=y)]
-                logger.info("Enemy spawned (fallback) at (%d,%d)", x, y)
-                break
+                candidates.append((x, y))
+
+    if candidates:
+        ex, ey = random.choice(candidates)
+        enemies = [Enemy(x=ex, y=ey)]
+        logger.info("Enemy spawned (fallback, random) at (%d,%d)", ex, ey)
 
     pygame.init()
     start_ticks = pygame.time.get_ticks()
