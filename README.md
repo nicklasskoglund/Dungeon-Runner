@@ -82,6 +82,7 @@ python -m drunner play --level demo_level.json
     │       ├─ enemy.py
     │       ├─ game.py
     │       ├─ game_helpers.py
+    │       ├─ generators.py
     │       ├─ level.py
     │       ├─ level_io.py
     │       ├─ movement.py
@@ -101,6 +102,8 @@ python -m drunner play --level demo_level.json
     │   └─ .gitkeep
     └─ /tests/
         ├─ test_bugreport.py
+        ├─ test_enemy_random_walk.py
+        ├─ test_generators.py
         ├─ test_level_io.py
         ├─ test_report.py
         └─ test_security.py
