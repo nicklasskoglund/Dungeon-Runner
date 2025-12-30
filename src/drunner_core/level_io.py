@@ -43,12 +43,29 @@ def load_level(path: Path) -> Level:
     
     name = str(data.get('name', path.stem))
     grid = data.get('grid')
-    
+    enemies_raw = data.get('enemies', [])
+    if enemies_raw is None:
+        enemies_raw = []
+
+    if not isinstance(enemies_raw, list):
+        raise LevelIOError(f'Invalid "enemies" in {path}. Expected list of [x,y].')
+
+    enemies: list[tuple[int, int]] = []
+    for item in enemies_raw:
+        if not isinstance(item, (list, tuple)) or len(item) != 2:
+            raise LevelIOError(f'Invalid enemy entry in {path}: {item!r}. Expected [x,y].')
+        try:
+            x = int(item[0])
+            y = int(item[1])
+        except (TypeError, ValueError) as e:
+            raise LevelIOError(f'Invalid enemy coords in {path}: {item!r}. Expected integers.') from e
+        enemies.append((x, y))
+
     if not isinstance(grid, list) or not grid or not all(isinstance(r, list) for r in grid):
         raise LevelIOError(f'Invalid or missing "grid" in {path}. Expected 2D list.')
     
     try:
-        level = Level.from_rows(grid, name=name)
+        level = Level.from_rows(grid, name=name, enemies=enemies)
     except (ValueError, LevelValidationError) as e:
         raise LevelIOError(f'Invalid grid data in {path}: {e}') from e
     
@@ -65,8 +82,10 @@ def save_level(level: Level, path: Path) -> None:
     payload = {
         'version': 1,
         'name': level.name,
+        'enemies': [ [x, y] for (x, y) in level.enemies ],
         'grid': [[int(t) for t in row] for row in level.tiles],
     }
+
     path.write_text(json.dumps(payload, indent=2), encoding='utf-8')
     
     

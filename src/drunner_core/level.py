@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import Iterable, Sequence
 
@@ -38,6 +38,7 @@ class Level:
     '''
     tiles: list[list[Tile]]
     name: str = 'unnamed'
+    enemies: list[tuple[int, int]] = field(default_factory=list)
     
     def __post_init__(self) -> None:
         '''
@@ -56,7 +57,15 @@ class Level:
                 if not isinstance(t, Tile):
                     raise LevelValidationError(f'Invalid tile at ({x},{y}): {t!r}')
                 
-
+        for (ex, ey) in self.enemies:
+            if not self.in_bounds(ex, ey):
+                raise LevelValidationError(f'Enemy out of bounds: ({ex},{ey})')
+            if not self.is_walkable(ex, ey):
+                raise LevelValidationError(f'Enemy on non-walkable tile at ({ex},{ey})')
+            if self.tile_at(ex, ey) == Tile.START:
+                raise LevelValidationError('Enemy cannot spawn on START tile')
+        
+                
     @property
     def width(self) -> int:
         '''
@@ -120,7 +129,12 @@ class Level:
                 yield (x, y, t)
                 
     @classmethod
-    def from_rows(cls, rows: Sequence[Sequence[int | Tile]], name: str = 'unnamed') -> Level:
+    def from_rows(
+        cls,
+        rows: Sequence[Sequence[int | Tile]],
+        name: str = 'unnamed',
+        enemies: Sequence[Sequence[int]] | None = None,
+    ) -> "Level":
         '''
         Build a Level from numeric rows (or Tiles).
 
@@ -132,7 +146,12 @@ class Level:
             for v in row:
                 converted.append(v if isinstance(v, Tile) else Tile(int(v)))
             tiles.append(converted)
-        return cls(tiles=tiles, name=name)
+        enemy_list: list[tuple[int, int]] = []
+        if enemies:
+            for e in enemies:
+                enemy_list.append((int(e[0]), int(e[1])))
+
+        return cls(tiles=tiles, name=name, enemies=enemy_list)
     
     @classmethod
     def from_ascii(cls, lines: Sequence[str], name: str = 'ascii') -> Level:
