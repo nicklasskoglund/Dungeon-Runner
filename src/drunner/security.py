@@ -6,9 +6,9 @@ Security helpers for drunner.
 Provides small utilities to validate user-supplied paths and file types.
 '''
 
-import re
-
 from __future__ import annotations
+
+import re
 from pathlib import Path
 
 class SecurityError(ValueError):
