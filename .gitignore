@@ -233,3 +233,6 @@ logs/*
 !logs/.gitkeep
 reports/*
 !reports/.gitkeep
+
+# Generated levels (artifacts)
+levels/generated/
