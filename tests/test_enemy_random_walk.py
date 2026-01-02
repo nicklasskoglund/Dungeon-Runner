@@ -6,7 +6,7 @@ from drunner_core.enemy import Enemy
 from drunner_core.level import Level
 
 
-def test_enemy_random_walk_moves_in_both_axes():
+def test_enemy_random_walk_moves_in_both_axes() -> None:
     level = Level.from_ascii(
         [
             "#######",
