@@ -18,7 +18,7 @@ def test_write_run_report_creates_file_and_fields(tmp_path: Path) -> None:
         seed=123,
         run_id="abc123",
         score=10,
-        version="0.2.0",
+        version="0.0.0-test",
     )
 
     assert out.exists()
@@ -33,7 +33,7 @@ def test_write_run_report_creates_file_and_fields(tmp_path: Path) -> None:
     assert data["result"] == "WON"
     assert data["level_source"] == "levels/demo.json"
     assert data["score"] == 10
-    assert data["version"] == "0.2.0"
+    assert data["version"] == "0.0.0-test"
     assert data["duration_seconds"] == pytest.approx(1.23)
 
     # timestamp format: YYYYMMDD_HHMMSS_mmm
