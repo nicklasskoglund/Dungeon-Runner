@@ -7,7 +7,7 @@ from drunner_core.level import Tile
 
 
 def _sig(level) -> str:
-    blob = '\n'.join(''.join(str(int(t)) for t in row) for row in level.tiles).encode('utf-8')
+    blob = "\n".join("".join(str(int(t)) for t in row) for row in level.tiles).encode("utf-8")
     return hashlib.sha256(blob).hexdigest()
 
 

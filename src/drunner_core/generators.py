@@ -19,24 +19,24 @@ class Rect:
     def center(self) -> Tuple[int, int]:
         return (self.x + self.w // 2, self.y + self.h // 2)
 
-    def intersects(self, other: 'Rect', pad: int = 1) -> bool:
+    def intersects(self, other: "Rect", pad: int = 1) -> bool:
         return not (
-            self.x + self.w + pad <= other.x or
-            other.x + other.w + pad <= self.x or
-            self.y + self.h + pad <= other.y or
-            other.y + other.h + pad <= self.y
+            self.x + self.w + pad <= other.x
+            or other.x + other.w + pad <= self.x
+            or self.y + self.h + pad <= other.y
+            or other.y + other.h + pad <= self.y
         )
 
 
 def generate_level(seed: int, width: int, height: int) -> Level:
-    '''
+    """
     Generate a deterministic rooms + corridors dungeon.
 
     Contract:
       - Same seed + same dimensions => same grid
       - Exactly 1 START tile and exactly 1 EXIT tile
       - Returns drunner_core.level.Level (compatible with level_io v1)
-    '''
+    """
     _validate_dimensions(width, height)
 
     rng = random.Random(seed)
@@ -94,7 +94,7 @@ def generate_level(seed: int, width: int, height: int) -> Level:
     # Final conversion to Level (validates tiles etc.)
     level = Level.from_rows(
         grid,
-        name=f'generated_seed_{seed}',
+        name=f"generated_seed_{seed}",
         enemies=[],
     )
     return level
@@ -103,7 +103,7 @@ def generate_level(seed: int, width: int, height: int) -> Level:
 def _validate_dimensions(width: int, height: int) -> None:
     # Rooms+corridors needs some space, keep this simple and explicit.
     if width < 15 or height < 11:
-        raise ValueError('width/height too small for rooms+corridors generator (min 15x11).')
+        raise ValueError("width/height too small for rooms+corridors generator (min 15x11).")
 
 
 def _carve_room(grid: list[list[int]], r: Rect, floor: int) -> None:

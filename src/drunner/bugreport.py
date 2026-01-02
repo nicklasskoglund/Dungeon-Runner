@@ -25,8 +25,8 @@ class CrashReport:
     log_file: str | None = None
     log_tail: str | None = None
     version: str | None = None
-    
-    
+
+
 def _make_run_id() -> str:
     return uuid.uuid4().hex[:10]
 
@@ -37,20 +37,20 @@ def _make_seed() -> int:
 
 def _make_timestamp() -> str:
     now = datetime.now()
-    return now.strftime('%Y%m%d_%H%M%S_') + f'{int(now.microsecond/1000):03d}'
+    return now.strftime("%Y%m%d_%H%M%S_") + f"{int(now.microsecond / 1000):03d}"
 
 
 def _default_reports_dir(project_root: Path) -> Path:
-    return project_root / 'reports'
+    return project_root / "reports"
 
 
 def sanitize_config(cfg: Any) -> dict[str, Any]:
-    '''
+    """
     Create a sanitized snapshot of cfg:
     - converts dataclasses/objects/mappings to dict
     - strips sensitive keys
     - converts Paths to strings
-    '''
+    """
     if cfg is None:
         raw: dict[str, Any] = {}
     elif isinstance(cfg, Mapping):
@@ -59,16 +59,16 @@ def sanitize_config(cfg: Any) -> dict[str, Any]:
         raw = asdict(cfg)
     else:
         raw = dict(vars(cfg))
-        
-    sensitive_markers = ('password', 'secret', 'token', 'api_key', 'apikey', 'key')
+
+    sensitive_markers = ("password", "secret", "token", "api_key", "apikey", "key")
     out: dict[str, Any] = {}
-    
+
     for k, v in raw.items():
         lk = str(k).lower()
         if any(m in lk for m in sensitive_markers):
-            out[str(k)] = '[REDACTED]'
+            out[str(k)] = "[REDACTED]"
             continue
-        
+
         if isinstance(v, Path):
             out[str(k)] = str(v)
         else:
@@ -78,24 +78,24 @@ def sanitize_config(cfg: Any) -> dict[str, Any]:
                 out[str(k)] = v
             except TypeError:
                 out[str(k)] = str(v)
-                
+
     return out
 
 
-def tail_text_file(path: Path, max_lines: int = 80) -> str  | None:
-    '''
+def tail_text_file(path: Path, max_lines: int = 80) -> str | None:
+    """
     Return the last max_lines lines from a text file (best-effort).
-    '''
+    """
     if not path or not path.exists():
         return None
-    
+
     try:
-        lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
-        return '\n'.join(lines[-max_lines:])
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        return "\n".join(lines[-max_lines:])
     except Exception:
         return None
-    
-    
+
+
 def write_crash_report(
     *,
     project_root: Path,
@@ -105,21 +105,21 @@ def write_crash_report(
     seed: int | None = None,
     log_file_path: Path | None = None,
     version: str | None = None,
-    ) -> Path:
-    '''
+) -> Path:
+    """
     Write reports/crash_<timestamp>_<run_id>.json and return created path.
-    '''
+    """
     rid = run_id or _make_run_id()
     s = seed if seed is not None else _make_seed()
     ts = _make_timestamp()
-    
+
     reports_dir = _default_reports_dir(project_root)
     reports_dir.mkdir(parents=True, exist_ok=True)
-    
-    crash_path = reports_dir / f'crash_{ts}_{rid}.json'
-    
-    stack = ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-    
+
+    crash_path = reports_dir / f"crash_{ts}_{rid}.json"
+
+    stack = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+
     report = CrashReport(
         run_id=rid,
         timestamp=ts,
@@ -132,11 +132,11 @@ def write_crash_report(
         log_tail=tail_text_file(log_file_path) if log_file_path else None,
         version=version,
     )
-    
+
     payload: dict[str, Any] = asdict(report)
-    with crash_path.open('w', encoding='utf-8') as f:
+    with crash_path.open("w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
-        
+
     return crash_path
 
 
@@ -150,14 +150,14 @@ def run_guarded(
     log_file_path: Path | None = None,
     version: str | None = None,
     logger: Any | None = None,
-    ) -> Any:
-    '''
+) -> Any:
+    """
     Execute func(). On exception, write crash report and re-raise.
     This is convenient for entrypoints and easy to unit test.
-    '''
+    """
     rid = run_id or _make_run_id()
     s = seed if seed is not None else _make_seed()
-    
+
     try:
         return func()
     except Exception as exc:
@@ -171,5 +171,5 @@ def run_guarded(
             version=version,
         )
         if logger is not None:
-            logger.exception('Unhandled exception. Crash report saved: %s', crash_path)
+            logger.exception("Unhandled exception. Crash report saved: %s", crash_path)
         raise

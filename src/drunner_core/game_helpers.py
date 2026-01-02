@@ -12,5 +12,5 @@ def find_spawn(level: Level) -> tuple[int, int]:
     for x, y, tile in level.iter_tiles():
         if tile == Tile.START:
             return x, y
-        
+
     return (0, 0)

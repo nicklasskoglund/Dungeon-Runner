@@ -26,8 +26,8 @@ def run(
     cfg = load_config()
     logger = configure_logging(cfg)
 
-    logger.info('Starting Dungeon Runner')
-    logger.debug('Config root=%s', cfg.root_dir)
+    logger.info("Starting Dungeon Runner")
+    logger.debug("Config root=%s", cfg.root_dir)
 
     try:
         level_path: Path | None = None
@@ -41,30 +41,32 @@ def run(
             lvl = generate_level(seed_final, w, h)
 
             cfg.levels_dir.mkdir(parents=True, exist_ok=True)
-            gen_dir = cfg.levels_dir / 'generated'
+            gen_dir = cfg.levels_dir / "generated"
             gen_dir.mkdir(parents=True, exist_ok=True)
 
-            gen_file = gen_dir / f'seed_{seed_final}_{w}x{h}.json'
+            gen_file = gen_dir / f"seed_{seed_final}_{w}x{h}.json"
             save_level(lvl, gen_file)
 
-            logger.info('Generated level saved: %s (seed=%s size=%sx%s)', gen_file, seed_final, w, h)
+            logger.info(
+                "Generated level saved: %s (seed=%s size=%sx%s)", gen_file, seed_final, w, h
+            )
             level_path = gen_file
 
         else:
             if level:
                 p = safe_resolve(cfg.levels_dir, level)
-                require_suffix(p, '.json')
+                require_suffix(p, ".json")
                 level_path = p
 
         run_game(cfg, logger, level_path=level_path)
 
-        logger.info('Exiting Dungeon Runner')
+        logger.info("Exiting Dungeon Runner")
         return 0
 
     except (FileNotFoundError, SecurityError, LevelIOError) as e:
-        logger.error('%s', e)
-        print(f'ERROR: {e}', file=sys.stderr)
-        print(f'See log file: {cfg.log_file}', file=sys.stderr)
+        logger.error("%s", e)
+        print(f"ERROR: {e}", file=sys.stderr)
+        print(f"See log file: {cfg.log_file}", file=sys.stderr)
         return 2
 
     except Exception as e:
@@ -74,13 +76,13 @@ def run(
             cfg=cfg,
             run_id=None,
             seed=None,
-            log_file_path=Path(cfg.log_file) if getattr(cfg, 'log_file', None) else None,
+            log_file_path=Path(cfg.log_file) if getattr(cfg, "log_file", None) else None,
             version=None,
         )
 
-        logger.exception('Unhandled exception. Crash report saved: %s', crash_path)
+        logger.exception("Unhandled exception. Crash report saved: %s", crash_path)
 
-        print('ERROR: Unexpected crash.', file=sys.stderr)
-        print(f'Crash report: {crash_path}', file=sys.stderr)
-        print(f'See log file: {cfg.log_file}', file=sys.stderr)
+        print("ERROR: Unexpected crash.", file=sys.stderr)
+        print(f"Crash report: {crash_path}", file=sys.stderr)
+        print(f"See log file: {cfg.log_file}", file=sys.stderr)
         return 1

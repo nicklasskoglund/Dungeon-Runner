@@ -12,34 +12,42 @@ from drunner import main as app_main
 def test_crash_report_created_on_exception(tmp_path: Path) -> None:
     class DummyCfg:
         root = tmp_path
-        title = 'Dungeon Runner'
+        title = "Dungeon Runner"
         fps = 60
 
     def boom() -> None:
-        raise RuntimeError('boom')
+        raise RuntimeError("boom")
 
     with pytest.raises(RuntimeError):
         run_guarded(
             boom,
             project_root=tmp_path,
             cfg=DummyCfg(),
-            run_id='abc123',
+            run_id="abc123",
             seed=123,
             log_file_path=None,
             logger=None,
         )
 
-    reports_dir = tmp_path / 'reports'
-    files = list(reports_dir.glob('crash_*_abc123.json'))
+    reports_dir = tmp_path / "reports"
+    files = list(reports_dir.glob("crash_*_abc123.json"))
     assert len(files) == 1
 
-    data = json.loads(files[0].read_text(encoding='utf-8'))
-    for key in ('run_id', 'timestamp', 'seed', 'stacktrace', 'config', 'exception_type', 'exception_message'):
+    data = json.loads(files[0].read_text(encoding="utf-8"))
+    for key in (
+        "run_id",
+        "timestamp",
+        "seed",
+        "stacktrace",
+        "config",
+        "exception_type",
+        "exception_message",
+    ):
         assert key in data
 
-    assert data['run_id'] == 'abc123'
-    assert data['seed'] == 123
-    assert 'RuntimeError' in data['stacktrace']
+    assert data["run_id"] == "abc123"
+    assert data["seed"] == 123
+    assert "RuntimeError" in data["stacktrace"]
 
 
 class DummyLogger:
@@ -53,43 +61,43 @@ class DummyCfg:
     def __init__(self, root_dir: Path, log_file: Path):
         self.root_dir = root_dir
         self.log_file = str(log_file)
-        self.api_token = 'supersecret'  # ska saneras till [REDACTED]
+        self.api_token = "supersecret"  # ska saneras till [REDACTED]
 
 
 def test_entrypoint_creates_crash_report(tmp_path: Path, monkeypatch) -> None:
     # skapa en loggfil så bugreport kan inkludera log_tail
-    logs_dir = tmp_path / 'logs'
+    logs_dir = tmp_path / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
-    log_path = logs_dir / 'drunner.log'
-    log_path.write_text('line1\nline2\n', encoding='utf-8')
+    log_path = logs_dir / "drunner.log"
+    log_path.write_text("line1\nline2\n", encoding="utf-8")
 
     cfg = DummyCfg(root_dir=tmp_path, log_file=log_path)
 
     # patcha config + logger
-    monkeypatch.setattr(app_main, 'load_config', lambda: cfg)
-    monkeypatch.setattr(app_main, 'configure_logging', lambda _cfg: DummyLogger())
+    monkeypatch.setattr(app_main, "load_config", lambda: cfg)
+    monkeypatch.setattr(app_main, "configure_logging", lambda _cfg: DummyLogger())
 
     # patcha run_game så den kraschar
     def boom(*_args, **_kwargs) -> None:
-        raise RuntimeError('boom')
+        raise RuntimeError("boom")
 
-    monkeypatch.setattr(app_main, 'run_game', boom)
+    monkeypatch.setattr(app_main, "run_game", boom)
 
     exit_code = app_main.run(None)
     assert exit_code == 1
 
-    crash_files = list((tmp_path / 'reports').glob('crash_*.json'))
+    crash_files = list((tmp_path / "reports").glob("crash_*.json"))
     assert len(crash_files) == 1
 
-    data = json.loads(crash_files[0].read_text(encoding='utf-8'))
+    data = json.loads(crash_files[0].read_text(encoding="utf-8"))
 
     # acceptance: stacktrace + seed + run_id + sanerad config
-    for k in ('stacktrace', 'seed', 'run_id', 'config'):
+    for k in ("stacktrace", "seed", "run_id", "config"):
         assert k in data
 
-    assert 'RuntimeError' in data['stacktrace']
-    assert data['config'].get('api_token') == '[REDACTED]'
+    assert "RuntimeError" in data["stacktrace"]
+    assert data["config"].get("api_token") == "[REDACTED]"
 
     # logfil pekas ut och/eller tail inkluderas (vi förväntar oss båda om du skickar log_file_path i main.py)
-    assert data.get('log_file') is not None
-    assert data.get('log_tail') is not None
+    assert data.get("log_file") is not None
+    assert data.get("log_tail") is not None
