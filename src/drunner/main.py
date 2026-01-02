@@ -23,6 +23,17 @@ def run(
     width: int | None = None,
     height: int | None = None,
 ) -> int:
+    """
+    Application entrypoint used by the CLI.
+
+    Loads config + logging, resolves a level source (file or generator),
+    starts the pygame loop, and returns a process exit code.
+
+    Exit codes:
+        0: clean exit
+        1: unexpected crash (crash report written)
+        2: expected/user error (bad input, missing level, invalid level, security)
+    """
     cfg = load_config()
     logger = configure_logging(cfg)
 
