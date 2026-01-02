@@ -26,7 +26,7 @@ class Tile(IntEnum):
     EXIT = 3
 
 
-WALKABLE_TILES: set[Tile] = {Tile.FLOOR, Tile.START, Tile.EXIT}
+WALKABLE_TILES: frozenset[Tile] = frozenset({Tile.FLOOR, Tile.START, Tile.EXIT})
 
 
 @dataclass(slots=True)
@@ -47,10 +47,14 @@ class Level:
         """
         Validate that tiles are a non-empty rectangular grid of Tile values.
         """
+
         if not self.tiles or not self.tiles[0]:
             raise LevelValidationError("Level grid is empty.")
 
         width = len(self.tiles[0])
+        start_count = 0
+        exit_count = 0
+
         for y, row in enumerate(self.tiles):
             if len(row) != width:
                 raise LevelValidationError(
@@ -59,6 +63,16 @@ class Level:
             for x, t in enumerate(row):
                 if not isinstance(t, Tile):
                     raise LevelValidationError(f"Invalid tile at ({x},{y}): {t!r}")
+
+                if t == Tile.START:
+                    start_count += 1
+                elif t == Tile.EXIT:
+                    exit_count += 1
+
+        if start_count != 1:
+            raise LevelValidationError(f"Expected exactly 1 START tile, found {start_count}")
+        if exit_count != 1:
+            raise LevelValidationError(f"Expected exactly 1 EXIT tile, found {exit_count}")
 
         for ex, ey in self.enemies:
             if not self.in_bounds(ex, ey):
