@@ -29,7 +29,7 @@ def load_level(path: Path) -> Level:
     Tile encoding must match Tile enum integers.
     """
     if not path.exists():
-        raise FileNotFoundError(f"Level file not found in levels/: {path.name}")
+        raise FileNotFoundError(f"Level file not found: {path}")
 
     try:
         raw = path.read_text(encoding="utf-8")
@@ -63,8 +63,11 @@ def load_level(path: Path) -> Level:
             ) from e
         enemies.append((x, y))
 
-    if not isinstance(grid, list) or not grid or not all(isinstance(r, list) for r in grid):
-        raise LevelIOError(f'Invalid or missing "grid" in {path}. Expected 2D list.')
+    if not isinstance(grid, list) or not grid:
+        raise LevelIOError(f'{path.name}: missing "grid" (expected 2D list).')
+
+    if not all(isinstance(r, list) for r in grid):
+        raise LevelIOError(f'{path.name}: invalid "grid" (expected 2D list of rows).')
 
     try:
         level = Level.from_rows(grid, name=name, enemies=enemies)
@@ -95,7 +98,7 @@ def _validate_required_tiles(level: Level, source: Path) -> None:
     """
     Enforce minimal constraints so levels are playable.
     - Exactly 1 START
-    - At least 1 EXIT
+    - Exactly 1 EXIT
     """
     starts = list(level.positions_of(Tile.START))
     exits = list(level.positions_of(Tile.EXIT))
