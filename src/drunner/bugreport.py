@@ -36,6 +36,9 @@ def _make_seed() -> int:
 
 
 def _make_timestamp() -> str:
+    """
+    Return a timestamp string: YYYYMMDD_HHMMSS_mmm (milliseconds).
+    """
     now = datetime.now()
     return now.strftime("%Y%m%d_%H%M%S_") + f"{int(now.microsecond / 1000):03d}"
 
@@ -107,7 +110,9 @@ def write_crash_report(
     version: str | None = None,
 ) -> Path:
     """
-    Write reports/crash_<timestamp>_<run_id>.json and return created path.
+    Write a crash report JSON under reports/ and return the created path.
+
+    If seed/run_id are not provided, they are generated.
     """
     rid = run_id or _make_run_id()
     s = seed if seed is not None else _make_seed()
