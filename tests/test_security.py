@@ -94,3 +94,12 @@ def test_validate_seed_valid() -> None:
 def test_validate_seed_rejects_out_of_range() -> None:
     with pytest.raises(SecurityError):
         validate_seed(-1)
+
+
+def test_validate_seed_allows_max() -> None:
+    assert validate_seed(2**32 - 1) == 2**32 - 1
+
+
+def test_validate_seed_rejects_too_large() -> None:
+    with pytest.raises(SecurityError):
+        validate_seed(2**32)
