@@ -91,3 +91,26 @@ def test_load_level_raises_on_multiple_exits(tmp_path: Path) -> None:
 
     with pytest.raises(LevelIOError):
         load_level(path)
+
+
+def test_load_level_raises_on_non_rectangular_grid(tmp_path: Path) -> None:
+    grid = _valid_grid()
+    grid.append([1, 1, 1])  # wrong width
+
+    path = tmp_path / "bad_shape.json"
+    payload = {"version": 1, "name": "bad_shape", "grid": grid}
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(LevelIOError):
+        load_level(path)
+
+
+def test_save_includes_enemies(tmp_path: Path) -> None:
+    grid = _valid_grid()
+    level = Level.from_rows(grid, name="with_enemies", enemies=[[2, 1], [3, 3]])
+
+    path = tmp_path / "with_enemies.json"
+    save_level(level, path)
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data["enemies"] == [[2, 1], [3, 3]]
