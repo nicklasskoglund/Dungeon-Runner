@@ -1,25 +1,27 @@
 # src/drunner/security.py
 
-'''
+"""
 Security helpers for drunner.
 
 Provides small utilities to validate user-supplied paths and file types.
-'''
+"""
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
+
 class SecurityError(ValueError):
-    '''
+    """
     Raised when a security validation fails (e.g., unsafe path or file type).
-    '''
+    """
+
     pass
 
 
 def safe_resolve(base_dir: Path, user_path: str) -> Path:
-    '''
+    """
     Resolve a user-supplied path inside a base directory.
 
     This prevents path traversal (e.g., ../../secret) by ensuring the resolved
@@ -34,20 +36,20 @@ def safe_resolve(base_dir: Path, user_path: str) -> Path:
 
     Raises:
         SecurityError: If the resolved path is outside base_dir.
-    '''
+    """
     base = base_dir.resolve()
     # Resolve/normalize to collapse '..' and follow symlinks.
     candidate = (base / user_path).resolve()
-    
+
     # Allow exactly base itself, otherwise require candidate to be a child of base.
     if base not in candidate.parents and candidate != base:
-        raise SecurityError(f'Unsafe path: {user_path}')
-    
+        raise SecurityError(f"Unsafe path outside base directory: {user_path}")
+
     return candidate
 
 
 def require_suffix(p: Path, suffix: str) -> Path:
-    '''
+    """
     Require a specific file suffix (case-insensitive).
 
     Args:
@@ -59,18 +61,18 @@ def require_suffix(p: Path, suffix: str) -> Path:
 
     Raises:
         SecurityError: If the suffix does not match.
-    '''
+    """
     # Compare case-insensitively so '.TOML' also matches '.toml'.
     if p.suffix.lower() != suffix.lower():
-        raise SecurityError(f'Invalid file type: expected {suffix}, got {p.suffix}')
+        raise SecurityError(f"{p.name}: invalid file type (expected {suffix}, got {p.suffix})")
     return p
 
 
-_LEVEL_NAME_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}(\.json)?$')
+_LEVEL_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}(\.json)?$")
 
 
-def clamp_int(value, min_value: int, max_value: int, field_name: str = 'value') -> int:
-    '''
+def clamp_int(value: object, min_value: int, max_value: int, field_name: str = "value") -> int:
+    """
     Clamp/validate an integer-like input into an inclusive range.
 
     Args:
@@ -84,19 +86,19 @@ def clamp_int(value, min_value: int, max_value: int, field_name: str = 'value') 
 
     Raises:
         SecurityError: If conversion fails or value is outside range.
-    '''
+    """
     try:
         ivalue = int(value)
     except (TypeError, ValueError) as e:
-        raise SecurityError(f'{field_name} must be an integer') from e
+        raise SecurityError(f"{field_name} must be an integer") from e
 
     if ivalue < min_value or ivalue > max_value:
-        raise SecurityError(f'{field_name} must be between {min_value} and {max_value}')
+        raise SecurityError(f"{field_name} must be between {min_value} and {max_value}")
     return ivalue
 
 
-def validate_seed(seed, *, min_value: int = 0, max_value: int = 2**32 - 1):
-    '''
+def validate_seed(seed: object, *, min_value: int = 0, max_value: int = 2**32 - 1) -> int | None:
+    """
     Validate a RNG seed.
 
     Args:
@@ -109,14 +111,14 @@ def validate_seed(seed, *, min_value: int = 0, max_value: int = 2**32 - 1):
 
     Raises:
         SecurityError: If seed is invalid.
-    '''
+    """
     if seed is None:
         return None
-    return clamp_int(seed, min_value, max_value, field_name='seed')
+    return clamp_int(seed, min_value, max_value, field_name="seed")
 
 
 def safe_join(base_dir: Path, user_path: str | Path) -> Path:
-    '''
+    """
     Join/resolve user_path within base_dir while preventing traversal.
 
     This is a naming wrapper required by Trello card 5.
@@ -128,12 +130,12 @@ def safe_join(base_dir: Path, user_path: str | Path) -> Path:
 
     Returns:
         Path: Safe absolute resolved path.
-    '''
+    """
     return safe_resolve(base_dir, str(user_path))
 
 
 def validate_level_name(name: str) -> str:
-    '''
+    """
     Validate a level name so it cannot be used for traversal.
 
     Allowed:
@@ -152,19 +154,19 @@ def validate_level_name(name: str) -> str:
 
     Raises:
         SecurityError: If invalid.
-    '''
+    """
     if not isinstance(name, str):
-        raise SecurityError('level name must be a string')
+        raise SecurityError("level name must be a string")
 
     cleaned = name.strip()
     if not cleaned:
-        raise SecurityError('level name cannot be empty')
+        raise SecurityError("level name cannot be empty")
 
     # Hard-block separators/traversal primitives early.
-    if '/' in cleaned or '\\' in cleaned or '..' in cleaned:
-        raise SecurityError('invalid level name')
+    if "/" in cleaned or "\\" in cleaned or ".." in cleaned:
+        raise SecurityError("invalid level name")
 
     if not _LEVEL_NAME_RE.fullmatch(cleaned):
-        raise SecurityError('invalid level name')
+        raise SecurityError("invalid level name")
 
     return cleaned

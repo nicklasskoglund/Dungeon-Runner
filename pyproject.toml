@@ -13,11 +13,17 @@ description = "Dungeon Runner"
 readme = "README.md"
 
 # Minimum supported Python version.
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 
 # Runtime dependencies installed with the package.
 dependencies = [
   "pygame-ce>=2.5.6",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.7.0",
+  "pytest>=8.0",
 ]
 
 [project.scripts]
@@ -31,3 +37,17 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["drunner", "drunner_core"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E", "F"]
