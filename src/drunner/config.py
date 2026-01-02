@@ -50,7 +50,7 @@ def _project_root() -> Path:
     Returns:
         Path: Project root directory.
     """
-    # src/drunner/config.py -> parants[2] = repo-root
+    # src/drunner/config.py -> parents[2] = repo-root
     return Path(__file__).resolve().parents[2]
 
 
@@ -76,7 +76,7 @@ def load_config(config_path: Path | None = None) -> AppConfig:
         raise FileNotFoundError(f"Missing config file: {cfg_path}")
 
     if tomllib is None:
-        raise RuntimeError("tomllib not available. Use Python 3.11+ for config.toml support")
+        raise RuntimeError("tomllib not available. Run on Python 3.11+ to load config.toml.")
 
     # Read and parse TOML into a nested dict structure
     data: dict[str, Any] = tomllib.loads(cfg_path.read_text(encoding="utf-8"))
@@ -94,6 +94,8 @@ def load_config(config_path: Path | None = None) -> AppConfig:
     # Ensure output directories exist (safe to call multiple times)
     logs_dir.mkdir(parents=True, exist_ok=True)
     reports_dir.mkdir(parents=True, exist_ok=True)
+    levels_dir.mkdir(parents=True, exist_ok=True)
+    assets_dir.mkdir(parents=True, exist_ok=True)
 
     log_file = logs_dir / str(logging_cfg.get("file_name", "drunner.log"))
 
