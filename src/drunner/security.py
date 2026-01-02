@@ -43,7 +43,7 @@ def safe_resolve(base_dir: Path, user_path: str) -> Path:
 
     # Allow exactly base itself, otherwise require candidate to be a child of base.
     if base not in candidate.parents and candidate != base:
-        raise SecurityError(f"Unsafe path: {user_path}")
+        raise SecurityError(f"Unsafe path outside base directory: {user_path}")
 
     return candidate
 
@@ -64,14 +64,14 @@ def require_suffix(p: Path, suffix: str) -> Path:
     """
     # Compare case-insensitively so '.TOML' also matches '.toml'.
     if p.suffix.lower() != suffix.lower():
-        raise SecurityError(f"Invalid file type: expected {suffix}, got {p.suffix}")
+        raise SecurityError(f"{p.name}: invalid file type (expected {suffix}, got {p.suffix})")
     return p
 
 
 _LEVEL_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}(\.json)?$")
 
 
-def clamp_int(value, min_value: int, max_value: int, field_name: str = "value") -> int:
+def clamp_int(value: object, min_value: int, max_value: int, field_name: str = "value") -> int:
     """
     Clamp/validate an integer-like input into an inclusive range.
 
@@ -97,7 +97,7 @@ def clamp_int(value, min_value: int, max_value: int, field_name: str = "value") 
     return ivalue
 
 
-def validate_seed(seed, *, min_value: int = 0, max_value: int = 2**32 - 1):
+def validate_seed(seed: object, *, min_value: int = 0, max_value: int = 2**32 - 1) -> int | None:
     """
     Validate a RNG seed.
 
