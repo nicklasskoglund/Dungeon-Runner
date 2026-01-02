@@ -42,10 +42,14 @@ def run(
 
     try:
         level_path: Path | None = None
+        run_seed: int | None = None
+        run_id: str | None = None
 
         if generate:
             # Default seed: current epoch seconds (easy to reproduce if logged)
             seed_final = int(seed) if seed is not None else int(time.time())
+            run_seed = seed_final
+
             w = int(width) if width is not None else 41
             h = int(height) if height is not None else 31
 
@@ -85,8 +89,8 @@ def run(
             project_root=cfg.root_dir,
             exc=e,
             cfg=cfg,
-            run_id=None,
-            seed=None,
+            run_id=run_id,
+            seed=run_seed,
             log_file_path=Path(cfg.log_file) if getattr(cfg, "log_file", None) else None,
             version=None,
         )
