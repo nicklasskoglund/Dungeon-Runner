@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 
 from drunner.main import run
 
@@ -51,9 +52,11 @@ def main(argv: list[str] | None = None) -> int:
 
         if generate_mode:
             if args.width is not None and args.width < 15:
-                raise SystemExit("--width must be >= 15 for --generate")
+                print("ERROR: --width must be >= 15 for --generate", file=sys.stderr)
+                return 2
             if args.height is not None and args.height < 11:
-                raise SystemExit("--height must be >= 11 for --generate")
+                print("ERROR: --height must be >= 11 for --generate", file=sys.stderr)
+                return 2
 
         return run(
             level=args.level,
