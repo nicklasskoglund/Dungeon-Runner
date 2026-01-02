@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from drunner import main as app_main
 from drunner.bugreport import run_guarded
@@ -11,7 +12,7 @@ from drunner.bugreport import run_guarded
 
 def test_crash_report_created_on_exception(tmp_path: Path) -> None:
     class DummyCfg:
-        root = tmp_path
+        root_dir = tmp_path
         title = "Dungeon Runner"
         fps = 60
 
@@ -61,11 +62,11 @@ class DummyCfg:
     def __init__(self, root_dir: Path, log_file: Path):
         self.root_dir = root_dir
         self.log_file = str(log_file)
-        self.api_token = "supersecret"  # ska saneras till [REDACTED]
+        self.api_token = "supersecret"  # should be sanitized to [REDACTED]
 
 
-def test_entrypoint_creates_crash_report(tmp_path: Path, monkeypatch) -> None:
-    # skapa en loggfil så bugreport kan inkludera log_tail
+def test_entrypoint_creates_crash_report(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    # create a log file so bugreport can include log_tail
     logs_dir = tmp_path / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
     log_path = logs_dir / "drunner.log"
@@ -73,11 +74,11 @@ def test_entrypoint_creates_crash_report(tmp_path: Path, monkeypatch) -> None:
 
     cfg = DummyCfg(root_dir=tmp_path, log_file=log_path)
 
-    # patcha config + logger
+    # patch config + logger
     monkeypatch.setattr(app_main, "load_config", lambda: cfg)
     monkeypatch.setattr(app_main, "configure_logging", lambda _cfg: DummyLogger())
 
-    # patcha run_game så den kraschar
+    # patch run_game so it crashes
     def boom(*_args, **_kwargs) -> None:
         raise RuntimeError("boom")
 
@@ -91,13 +92,13 @@ def test_entrypoint_creates_crash_report(tmp_path: Path, monkeypatch) -> None:
 
     data = json.loads(crash_files[0].read_text(encoding="utf-8"))
 
-    # acceptance: stacktrace + seed + run_id + sanerad config
+    # acceptance: stacktrace + seed + run_id + sanitized config
     for k in ("stacktrace", "seed", "run_id", "config"):
         assert k in data
 
     assert "RuntimeError" in data["stacktrace"]
     assert data["config"].get("api_token") == "[REDACTED]"
 
-    # logfil pekas ut och/eller tail inkluderas (vi förväntar oss båda om du skickar log_file_path i main.py)
+    # logfile is pointed out and/or tail is included (we expect both if you pass log_file_path in main.py)
     assert data.get("log_file") is not None
     assert data.get("log_tail") is not None
