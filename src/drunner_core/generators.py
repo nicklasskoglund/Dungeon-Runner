@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
+from itertools import pairwise
 
 from drunner_core.level import Level, Tile
 
@@ -78,7 +79,7 @@ def generate_level(seed: int, width: int, height: int) -> Level:
         # Stable connection order for determinism
         rooms_sorted = sorted(rooms, key=lambda r: (r.center()[0], r.center()[1]))
 
-        for a, b in zip(rooms_sorted, rooms_sorted[1:]):
+        for a, b in pairwise(rooms_sorted):
             _carve_corridor(grid, a.center(), b.center(), FLOOR, rng)
 
         start = rooms_sorted[0].center()
