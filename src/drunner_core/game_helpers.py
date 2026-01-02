@@ -1,4 +1,4 @@
-# src/drunner_core/game_players.py
+# src/drunner_core/game_helpers.py
 
 from __future__ import annotations
 
