@@ -70,7 +70,7 @@ def run_game(cfg: AppConfig, logger: logging.Logger, level_path: Path | None = N
     player = Player(x=sx, y=sy)
     logger.info("Player spawned at (%d,%d)", player.x, player.y)
 
-    # Project root for reports: prefer cfg.root if it exists, else CWD
+    # Project root for reports: prefer cfg.root_dir if it exists, else CWD
     project_root = Path(getattr(cfg, "root_dir", Path.cwd()))
 
     report_written = False
@@ -102,7 +102,7 @@ def run_game(cfg: AppConfig, logger: logging.Logger, level_path: Path | None = N
     state_end_ticks: int | None = None
 
     # Enemy entities (spawn from level if present; fallback otherwise)
-    spawn_points = getattr(level, "enemies", [])
+    spawn_points = level.enemies
     enemies: list[Enemy] = (
         [Enemy(x=int(x), y=int(y)) for (x, y) in spawn_points] if spawn_points else []
     )
@@ -181,9 +181,9 @@ def run_game(cfg: AppConfig, logger: logging.Logger, level_path: Path | None = N
                 for enemy in enemies:
                     enemy.update(dt, level)
 
-            # --- Win/Lose checks (bara medan RUNNING) ---
+            # --- Win/Lose checks (only while RUNNING) ---
             if state == GameState.RUNNING:
-                # Win: player når exit
+                # Win: player reached the exit
                 if level.tile_at(player.x, player.y) == Tile.EXIT:
                     state = GameState.WON
                     logger.info("Result: WON (exit reached) in %.2fs", elapsed_s)
@@ -192,7 +192,7 @@ def run_game(cfg: AppConfig, logger: logging.Logger, level_path: Path | None = N
 
                     _write_report_once(state.name, elapsed_s)
 
-                # Lose: enemy collision (hook för senare)
+                # Lose: enemy collision
                 elif any((enemy.x == player.x and enemy.y == player.y) for enemy in enemies):
                     state = GameState.LOST
                     logger.info("Result: LOST (enemy collision) in %.2fs", elapsed_s)
@@ -201,7 +201,7 @@ def run_game(cfg: AppConfig, logger: logging.Logger, level_path: Path | None = N
 
                     _write_report_once(state.name, elapsed_s)
 
-                # Lose: timer
+                # Lose: time limit reached
                 elif elapsed_s >= TIME_LIMIT_SECONDS:
                     state = GameState.LOST
                     logger.info(
