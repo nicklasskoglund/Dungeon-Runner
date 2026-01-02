@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import random
-from typing import List, Tuple
+from dataclasses import dataclass
 
 from drunner_core.level import Level, Tile
 
@@ -16,10 +15,10 @@ class Rect:
     w: int
     h: int
 
-    def center(self) -> Tuple[int, int]:
+    def center(self) -> tuple[int, int]:
         return (self.x + self.w // 2, self.y + self.h // 2)
 
-    def intersects(self, other: "Rect", pad: int = 1) -> bool:
+    def intersects(self, other: Rect, pad: int = 1) -> bool:
         return not (
             self.x + self.w + pad <= other.x
             or other.x + other.w + pad <= self.x
@@ -49,7 +48,7 @@ def generate_level(seed: int, width: int, height: int) -> Level:
 
     grid: list[list[int]] = [[WALL for _ in range(width)] for _ in range(height)]
 
-    rooms: List[Rect] = []
+    rooms: list[Rect] = []
     room_attempts = 80
     min_size = 4
     max_size = 10
@@ -114,8 +113,8 @@ def _carve_room(grid: list[list[int]], r: Rect, floor: int) -> None:
 
 def _carve_corridor(
     grid: list[list[int]],
-    a: Tuple[int, int],
-    b: Tuple[int, int],
+    a: tuple[int, int],
+    b: tuple[int, int],
     floor: int,
     rng: random.Random,
 ) -> None:

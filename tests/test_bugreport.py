@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from drunner.bugreport import run_guarded
 from drunner import main as app_main
+from drunner.bugreport import run_guarded
 
 
 def test_crash_report_created_on_exception(tmp_path: Path) -> None:

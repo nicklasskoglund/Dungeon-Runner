@@ -7,8 +7,8 @@ import pytest
 from drunner.security import (
     SecurityError,
     require_suffix,
-    safe_resolve,
     safe_join,
+    safe_resolve,
     validate_level_name,
     validate_seed,
 )

@@ -8,21 +8,21 @@ Sets up pygame, opens a window, handles basic events, and renders a minimal fram
 
 from __future__ import annotations
 
+import random
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pygame
-import random
 
+from drunner.report import write_run_report
 from drunner_core.enemy import Enemy
+from drunner_core.game_helpers import find_spawn
 from drunner_core.level import Level, Tile
 from drunner_core.level_io import load_level
-from drunner_core.render import compute_render_params, draw_level, draw_player, draw_enemies
-from drunner_core.game_helpers import find_spawn
 from drunner_core.movement import try_move
 from drunner_core.player import Player
+from drunner_core.render import compute_render_params, draw_enemies, draw_level, draw_player
 from drunner_core.state import GameState
-from drunner.report import write_run_report
 
 TIME_LIMIT_SECONDS = 60
 RESULT_HOLD_MS = 1200
@@ -30,10 +30,11 @@ RESULT_HOLD_MS = 1200
 if TYPE_CHECKING:
     # Imported only for type hints (avoids runtime imports/circular dependencies).
     import logging
+
     from drunner.config import AppConfig
 
 
-def run_game(cfg: "AppConfig", logger: "logging.Logger", level_path: Path | None = None) -> None:
+def run_game(cfg: AppConfig, logger: logging.Logger, level_path: Path | None = None) -> None:
     """
     Run the main pygame loop.
 

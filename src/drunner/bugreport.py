@@ -6,11 +6,11 @@ import json
 import secrets
 import traceback
 import uuid
-
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any
 
 
 @dataclass(frozen=True)

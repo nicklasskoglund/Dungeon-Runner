@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Iterable, Sequence
 
 
 class LevelValidationError(ValueError):
@@ -135,7 +135,7 @@ class Level:
         rows: Sequence[Sequence[int | Tile]],
         name: str = "unnamed",
         enemies: Sequence[Sequence[int]] | None = None,
-    ) -> "Level":
+    ) -> Level:
         """
         Build a Level from numeric rows (or Tiles).
 

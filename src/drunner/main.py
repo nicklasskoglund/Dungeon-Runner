@@ -11,8 +11,8 @@ from drunner.config import load_config
 from drunner.log import configure_logging
 from drunner.security import SecurityError, require_suffix, safe_resolve
 from drunner_core.game import run_game
-from drunner_core.level_io import LevelIOError, save_level
 from drunner_core.generators import generate_level
+from drunner_core.level_io import LevelIOError, save_level
 
 
 def run(

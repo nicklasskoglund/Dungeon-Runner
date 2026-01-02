@@ -6,9 +6,9 @@ from dataclasses import dataclass
 
 import pygame
 
+from drunner_core.enemy import Enemy
 from drunner_core.level import Level, Tile
 from drunner_core.player import Player
-from drunner_core.enemy import Enemy
 
 
 @dataclass(frozen=True)
