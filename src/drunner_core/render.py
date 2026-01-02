@@ -22,26 +22,26 @@ class RenderParams:
     offset_y: int
 
 
-def compute_render_params(level: Level, window_width: int, window_hight: int) -> RenderParams:
+def compute_render_params(level: Level, window_width: int, window_height: int) -> RenderParams:
     """
     Compute tile size and offsets to fit the level inside the window and center it.
     """
     if level.width <= 0 or level.height <= 0:
         raise ValueError("Level has invalid dimensions.")
 
-    tile_size = min(window_width // level.width, window_hight // level.height)
+    tile_size = min(window_width // level.width, window_height // level.height)
     tile_size = max(tile_size, 1)
 
     grid_px_w = level.width * tile_size
     grid_px_h = level.height * tile_size
 
     offset_x = (window_width - grid_px_w) // 2
-    offset_y = (window_hight - grid_px_h) // 2
+    offset_y = (window_height - grid_px_h) // 2
 
     return RenderParams(tile_size=tile_size, offset_x=offset_x, offset_y=offset_y)
 
 
-def draw_level(surface: pygame.surface, level: Level, params: RenderParams) -> None:
+def draw_level(surface: pygame.Surface, level: Level, params: RenderParams) -> None:
     """
     Draw the level grid using filled rectangles.
     """
@@ -68,6 +68,9 @@ def draw_level(surface: pygame.surface, level: Level, params: RenderParams) -> N
 
 
 def draw_player(surface: pygame.Surface, player: Player, params: RenderParams) -> None:
+    """
+    Draw the player as a padded rectangle within its tile.
+    """
     ts = params.tile_size
     ox = params.offset_x
     oy = params.offset_y
@@ -83,6 +86,9 @@ def draw_player(surface: pygame.Surface, player: Player, params: RenderParams) -
 
 
 def draw_enemies(surface: pygame.Surface, enemies: list[Enemy], params: RenderParams) -> None:
+    """
+    Draw enemies as padded rectangles within their tiles.
+    """
     ts = params.tile_size
     ox = params.offset_x
     oy = params.offset_y
