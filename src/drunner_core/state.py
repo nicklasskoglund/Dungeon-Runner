@@ -6,6 +6,10 @@ from enum import Enum, auto
 
 
 class GameState(Enum):
+    """
+    High-level game state used by the main loop.
+    """
+
     RUNNING = auto()
     WON = auto()
     LOST = auto()
